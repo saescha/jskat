@@ -46,7 +46,9 @@ public class SuitPlayer extends AbstractPlayer {
                 return c;
             return pullSuit();
         } else {
-            return clearSuite();
+            if (th.size() > 0)
+                return clearSuite();
+            return pullSuit();
         }
 
     }
