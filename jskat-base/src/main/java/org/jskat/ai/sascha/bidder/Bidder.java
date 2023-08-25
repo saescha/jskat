@@ -250,6 +250,10 @@ public class Bidder {
         // can't clear trump so we will loose some tricks
         if (th.oppSize() > th.size())
             clears += th.oppSize() - th.size() - 1;
+        if (jacksCount == 0 && th.size() < 4 && aces < 4)
+            return false;
+        if (jacksCount == 0 && th.size() < 5 && aces < 3)
+            return false;
 
         if (th.size() > 3 && bigOnes > 3 && aces > 1)
             return true;
