@@ -1,13 +1,15 @@
 package org.jskat.ai.sascha;
 
+import java.util.Random;
+
 import org.jskat.ai.AbstractAIPlayer;
+import org.jskat.ai.sascha.bidder.Bidder;
 import org.jskat.ai.sascha.opponent.LeftOpponentGrand;
 import org.jskat.ai.sascha.opponent.LeftOpponentNull;
 import org.jskat.ai.sascha.opponent.LeftOpponentSuit;
 import org.jskat.ai.sascha.opponent.RightOpponentGrand;
 import org.jskat.ai.sascha.opponent.RightOpponentNull;
 import org.jskat.ai.sascha.opponent.RightOpponentSuit;
-import org.jskat.ai.sascha.solo.GrandPlayer;
 import org.jskat.ai.sascha.solo.NullPlayer;
 import org.jskat.ai.sascha.solo.SuitPlayer;
 import org.jskat.data.GameAnnouncement;
@@ -16,8 +18,6 @@ import org.jskat.util.CardList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Random;
 
 /**
  * Random player for testing purposes and driving the other players nuts.
@@ -29,19 +29,16 @@ public class AIPlayerSascha extends AbstractAIPlayer {
     /**
      * Random generator for decision making.
      */
-    private final Random random = new Random();
 
     private Bidder bidder = null;
-    private boolean myGame = false;
     private AbstractPlayer player = null;
-    private int aggroLevel = 0;
+    private final Random random = new Random();
 
     /**
      * Creates a new instance of AIPlayerRND.
      */
     public AIPlayerSascha() {
-
-        this("unknown");
+        this("Sascha");
     }
 
     /**
@@ -69,7 +66,8 @@ public class AIPlayerSascha extends AbstractAIPlayer {
     @Override
     public GameAnnouncement announceGame() {
         log.info("announceGame");
-        myGame = true;
+        log.info("having {} and {}}", knowledge.getOwnCards(), knowledge.getSkat());
+        log.info("thinking {} and {}}", bidder.getC(), knowledge.getSkat());
         var a = bidder.gameAnnouncement();
         log.info("announcing game " + a + " on bid: " + knowledge.getHighestBid(knowledge.getPlayerPosition()));
         return bidder.gameAnnouncement();
@@ -102,12 +100,13 @@ public class AIPlayerSascha extends AbstractAIPlayer {
 
     @Override
     public void startGame() {
-        log.info("startGame");
+        log.info("startGame with declarer " + knowledge.getDeclarer());
         try {
             if (knowledge.getDeclarer() == null || knowledge.getDeclarer() == knowledge.getPlayerPosition()) {
+                log.info(knowledge.getPlayerPosition() + " being announcer");
                 switch (knowledge.getGameType()) {
                     case GRAND:
-                        player = new GrandPlayer(knowledge);
+                        player = new SuitPlayer(knowledge);
                         break;
                     case NULL:
                         player = new NullPlayer(knowledge);
@@ -118,9 +117,10 @@ public class AIPlayerSascha extends AbstractAIPlayer {
                 }
 
             } else if (knowledge.getDeclarer().getLeftNeighbor() == knowledge.getPlayerPosition()) {
+                log.info(knowledge.getPlayerPosition() + " being left opponent");
                 switch (knowledge.getGameType()) {
                     case GRAND:
-                        player = new LeftOpponentGrand(knowledge);
+                        player = new LeftOpponentSuit(knowledge);
                         break;
                     case NULL:
                         player = new LeftOpponentNull(knowledge);
@@ -131,9 +131,10 @@ public class AIPlayerSascha extends AbstractAIPlayer {
                 }
 
             } else if (knowledge.getDeclarer().getRightNeighbor() == knowledge.getPlayerPosition()) {
+                log.info(knowledge.getPlayerPosition() + " being right opponent");
                 switch (knowledge.getGameType()) {
                     case GRAND:
-                        player = new RightOpponentGrand(knowledge);
+                        player = new RightOpponentSuit(knowledge);
                         break;
                     case NULL:
                         player = new RightOpponentNull(knowledge);
@@ -147,34 +148,46 @@ public class AIPlayerSascha extends AbstractAIPlayer {
                 log.error("no player stance created");
             }
         } catch (Exception e) {
-
             log.error("", e);
-            System.exit(1);
         }
+    }
+
+    private Card playRandomCard() {
+
+        int index = -1;
+
+        // first find all possible cards
+        final CardList possibleCards = getPlayableCards(knowledge
+                .getTrickCards());
+
+        // then choose a random one
+        index = random.nextInt(possibleCards.size());
+
+        return possibleCards.get(index);
     }
 
     @Override
     public Card playCard() {
-        log.info("playCard");
+        log.info(player.getClass() + ": playCard");
+        var playableCards = getPlayableCards(knowledge.getCurrentTrick().getCardList());
         Card c;
         try {
             c = player.playCard();
         } catch (Exception e) {
             log.error("exception", e);
-            System.exit(1);
-            throw e;
+            return playRandomCard();
         }
 
         log.info("playing card: " + c);
 
         if (!knowledge.getOwnCards().contains(c)) {
             log.error("trying to play non-own card: " + c);
-            System.exit(1);
+            return playRandomCard();
         }
-        if (!getPlayableCards(knowledge.getCurrentTrick().getCardList()).contains(c)) {
+        if (!playableCards.contains(c)) {
             log.error("trying to play non-allowed card: " + c);
             log.error(player.getClass().getName());
-            System.exit(1);
+            return playRandomCard();
         }
 
         return c;
@@ -184,12 +197,12 @@ public class AIPlayerSascha extends AbstractAIPlayer {
     public CardList getCardsToDiscard() {
         log.info("getCardsToDiscard " + Util.makeReadable(knowledge.getOwnCards()));
         bidder = new Bidder(knowledge.getOwnCards(), knowledge.getPlayerPosition());
-        log.info("discarding: " + bidder.getCardsToDiscard());
+        var r = bidder.getCardsToDiscard();
+        log.info("discarding: " + r);
         try {
-            return bidder.getCardsToDiscard();
+            return r;
         } catch (Exception e) {
             log.error("", e);
-            System.exit(1);
             throw e;
         }
 
@@ -198,7 +211,6 @@ public class AIPlayerSascha extends AbstractAIPlayer {
     @Override
     public void prepareForNewGame() {
         log.info("prepareForNewGame");
-        myGame = false;
         // nothing to do for AIPlayerRND
     }
 

@@ -7,6 +7,7 @@ import org.jskat.ai.sascha.util.CardListWithInt;
 import org.jskat.data.Trick;
 import org.jskat.player.ImmutablePlayerKnowledge;
 import org.jskat.util.Card;
+import org.jskat.util.CardList;
 import org.jskat.util.Suit;
 
 public class NullPlayer extends AbstractPlayer {
@@ -38,9 +39,11 @@ public class NullPlayer extends AbstractPlayer {
         return getPlayableCard();
     }
 
-    private Card discardCard() {
+    private Card throwCard() {
 
         CardListWithInt w = new CardListWithInt();
+        w.cl = new CardList();
+        w.i = -1;
 
         for (NullSuitHelper sh : this.suits.values()) {
             if (sh.size() > 0) {
@@ -56,8 +59,13 @@ public class NullPlayer extends AbstractPlayer {
         if (w.cl.size() > 0) {
             return w.cl.get(w.cl.size() - 1);
         } else {
-            return getPlayableCard();
+            for (NullSuitHelper sh : this.suits.values()) {
+                if (sh.size() > 0)
+                    return sh.highest();
+            }
         }
+
+        return getPlayableCard();
 
     }
 
@@ -67,7 +75,7 @@ public class NullPlayer extends AbstractPlayer {
         if (sh.size() > 0) {
             return sh.getUnderCard(firstCard);
         } else {
-            return discardCard();
+            return throwCard();
         }
     }
 
@@ -77,7 +85,7 @@ public class NullPlayer extends AbstractPlayer {
         if (sh.size() > 0) {
             return sh.getUnderCard(firstCard, secondCard);
         } else {
-            return discardCard();
+            return throwCard();
         }
     }
 

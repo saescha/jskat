@@ -2,120 +2,168 @@ package org.jskat.ai.sascha.solo;
 
 import org.jskat.util.Card;
 import org.jskat.util.CardList;
-import org.jskat.util.GameType;
 import org.jskat.util.Suit;
-import org.jskat.util.rule.SkatRule;
-import org.jskat.util.rule.SkatRuleFactory;
 import org.jskat.util.Rank;
 import org.jskat.ai.sascha.Util;
-import org.jskat.data.Trick;
+import org.jskat.ai.sascha.util.CardWithInt;
 
-public class SuitHelper {
-    private Suit s;
+public class SuitHelper extends AbstractSuitHelper {
 
-    private CardList own, out, opp;
-    private int discardPriority, startingSize;
+    private int startingSize;
+
     public int getStartingSize() {
         return startingSize;
     }
 
-    private SkatRule rules;
-
     public SuitHelper(Suit s, CardList own) {
-        this.rules = SkatRuleFactory.getSkatRules(GameType.GRAND);
         this.s = s;
         this.out = new CardList();
         this.own = Util.filterSuite(own, s);
 
-        this.own.sort(GameType.GRAND);
+        this.own.sort(g);
 
         this.opp = new CardList();
         for (Rank r : Rank.values()) {
             if (r != Rank.JACK && !isOwn(r))
                 opp.add(Card.getCard(s, r));
         }
-        this.opp.sort(GameType.GRAND);
+        this.opp.sort(g);
 
         startingSize = this.own.size();
 
-        calculateDiscardPrio();
     }
 
-    private void calculateDiscardPrio() {
-        if (this.own.size() == 1) {
-            if (isOwn(Rank.ACE)) {
-                discardPriority = 0;
-            } else {
-                discardPriority = 10;
+    public int getThrowPriority() {
+        if (isUnbeatable() || has2ndHighest())
+            return -1;
+
+        switch (size()) {
+            case 1:
+                return 10;
+            case 2:
+                if (hasHighest())
+                    return 5;
+                return 3;
+            case 3:
+                return 1;
+            default:
+                return 0;
+        }
+
+    }
+
+    @Override
+    public int comebacks() {
+        if (hasHighest() && opp.size() > 2) {
+            if (isHighest(1) && opp.size() > 3)
+                return 2;
+            return 1;
+        }
+        return 0;
+    }
+
+    // public int neededClears() {
+
+    // boolean hh = hasHighest();
+    // if (size() == 1) {
+    // return 0;
+    // }
+    // if (opp.size() == 0)
+    // return 0;
+
+    // if (opp.size() == 1) {
+    // if (hh)
+    // return 0;
+
+    // return size() > 1 ? 1 : 0;
+    // }
+
+    // if (size() < 5) {
+    // if (hh) {
+    // if (isHighest(1))
+    // return 0;
+    // if (opp.size() < 3)
+    // return 0;
+    // return 1;
+    // } else {
+    // return has2ndHighest() ? 1 : 0;
+    // }
+    // }
+
+    // return isUnbeatable() ? 0 : 1;
+    // }
+
+    @Override
+    public int estimateLostTricks() {
+        if (isUnbeatable())
+            return 0;
+        boolean hh = hasHighest();
+
+        switch (size()) {
+            case 0:
+                return 0;
+            case 1:
+                return hh ? 0 : 1;
+            case 2:
+                return hh || has2ndHighest() ? 1 : 2;
+            case 3:
+                return hh && has2ndHighest() ? 1 : 2;
+            default:
+                return hh || has2ndHighest() ? 1 : 2;
+        }
+    }
+
+    @Override
+    public CardWithInt getDiscardPriority() {
+        if (size() == 0) {
+            return new CardWithInt(-1000, null);
+        }
+
+        Card c0 = own.get(0);
+        boolean hasAce = (c0.getRank() == Rank.ACE);
+        int discardedPoints = getDiscardedPoints();
+        if (size() == 1) {
+            if (hasAce) {
+                return new CardWithInt(-20, c0);
             }
-        } else if (this.own.size() == 2) {
-            if (isOwn(Rank.TEN)) {
-                discardPriority = 0;
-            } else if (isOwn(Rank.ACE)) {
-                discardPriority = 5;
-            } else {
-                discardPriority = 3;
+            return new CardWithInt(15 + c0.getPoints() - discardedPoints, c0);
+        }
+        Card c1 = own.get(1);
+        if (size() == 2) {
+            if (hasAce) {
+                if (c1.getRank() == Rank.TEN)
+                    return new CardWithInt(-16, c0);
+                return new CardWithInt(4, c1);
             }
-        } else {
-            discardPriority = 0;
+            if (c0.getRank() == Rank.TEN) {
+                if (c1.getRank() == Rank.KING)
+                    return new CardWithInt(-5, c0);
+                return new CardWithInt(8, c0);
+            }
+            return new CardWithInt(5 + c0.getPoints() - discardedPoints, c0);
         }
-    }
 
-    public int size() {
-        return own.size();
-    }
+        Card c2 = own.get(2);
 
-    public boolean isEmpty() {
-        return (own.size() == 0);
-    }
-
-    public int getDiscardPriority() {
-        return discardPriority;
-    }
-
-    private boolean isHighest(int index) {
-        for (Card oc : opp) {
-            if (rules.isCardBeatsCard(GameType.GRAND, own.get(index), oc))
-                return false;
+        if (size() == 3) {
+            if (hasAce) {
+                if (c1.getRank() == Rank.TEN) {
+                    if (c2.getRank() == Rank.KING)
+                        return new CardWithInt(-7, c0);
+                    return new CardWithInt(c2.getPoints(), c2);
+                }
+                return new CardWithInt(c1.getPoints(), c1);
+            }
+            if (c0.getRank() == Rank.TEN) {
+                if (c1.getRank() == Rank.KING)
+                    return new CardWithInt(0, c0);
+                return new CardWithInt(5, c0);
+            }
+            return new CardWithInt(c0.getPoints() + 1, c0);
         }
-        return true;
-    }
 
-    public boolean isUnbeatable() {
-        for (int i = 0; i < opp.size() && i < own.size(); i++) {
-            if (!isHighest(i))
-                return false;
-        }
-        return true;
-    }
+        return new CardWithInt(-1, own.get(own.size() - 1));
 
-    public boolean hasHighest() {
-        return (own.size() > 0 && isHighest(0));
-    }
-
-    public Card getDiscardCard() {
-        return own.get(own.size() - 1);
-    }
-
-    public Card getClearCard() {
-        return own.get(own.size() - 1);
-    }
-
-    public Card getPullCard() {
-        return own.get(0);
-    }
-
-    public boolean isOwn(Rank r) {
-        return own.contains(Card.getCard(s, r));
-    }
-
-    public void registerTrick(Trick trick) {
-        CardList sc = Util.filterSuite(trick.getCardList(), s);
-        out.addAll(sc);
-        opp.removeAll(sc);
-        own.removeAll(sc);
-
-        calculateDiscardPrio();
     }
 
 }
