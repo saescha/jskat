@@ -247,6 +247,9 @@ public class Bidder {
 
         int jacksCount = Util.countJacks(c);
 
+        if (th.size() < 3 && aces < 3)
+            return false;
+
         // can't clear trump so we will loose some tricks
         if (th.oppSize() > th.size())
             clears += th.oppSize() - th.size() - 1;

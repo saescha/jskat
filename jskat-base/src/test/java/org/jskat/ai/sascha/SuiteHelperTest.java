@@ -21,7 +21,7 @@ public class SuiteHelperTest {
         SuitHelper cut = new SuitHelper(Suit.CLUBS, cards);
         assertThat(cut.isUnbeatable()).isFalse();
         assertThat(cut.hasHighest()).isTrue();
-        assertThat(cut.getThrowPriority()).isZero();
+        assertThat(cut.getThrowPriority()).isEqualTo(-1);
         assertThat((cut.getPullCard() == Card.CA)).isTrue();
         assertThat((cut.getClearCard())).isEqualTo(Card.CQ);
         assertThat(cut.getNeededClears()).isEqualTo(1);
@@ -30,7 +30,7 @@ public class SuiteHelperTest {
 
         assertThat(cut.estimateLostTricks()).isEqualTo(1);
         assertThat(cut.comebacks()).isEqualTo(1);
-        assertThat(cut.getThrowPriority()).isZero();
+        assertThat(cut.getThrowPriority()).isEqualTo(-1);
         // assertThat(cut.neededClears()).isEqualTo(1);
         assertThat(cut.getNeededClears()).isEqualTo(1);
         Trick t = new Trick(0, Player.FOREHAND);
@@ -86,7 +86,7 @@ public class SuiteHelperTest {
         SuitHelper cut = new SuitHelper(Suit.CLUBS, cards);
         assertThat(cut.isUnbeatable()).isFalse();
         assertThat(cut.hasHighest()).isTrue();
-        assertThat(cut.getThrowPriority()).isEqualTo(0);
+        assertThat(cut.getThrowPriority()).isEqualTo(-1);
         assertThat((cut.getPullCard() == Card.CA)).isTrue();
         assertThat((cut.getThrowCard() == Card.C9)).isTrue();
     }
@@ -111,7 +111,7 @@ public class SuiteHelperTest {
         SuitHelper cut = new SuitHelper(Suit.CLUBS, cards);
         assertThat(cut.isUnbeatable()).isFalse();
         assertThat(cut.hasHighest()).isFalse();
-        assertThat(cut.getThrowPriority()).isEqualTo(0);
+        assertThat(cut.getThrowPriority()).isEqualTo(-1);
         assertThat((cut.getClearCard())).isEqualTo(Card.C7);
         assertThat((cut.getClearCard())).isEqualTo(Card.C7);
     }
