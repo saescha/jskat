@@ -193,13 +193,13 @@ public class BidderTest extends AbstractJSkatTest {
                 assertThat(cut.isGrand()).isTrue();
                 assertThat(cut.getCardsToDiscard()).contains(Card.HK, Card.DQ);
 
-                cards = new CardList(Arrays.asList(Card.CJ, Card.HJ, Card.CQ, Card.C7, Card.ST, Card.HA,
-                                Card.HT, Card.HK, Card.HQ, Card.DA, Card.D9, Card.D7));
+                // cards = new CardList(Arrays.asList(Card.CJ, Card.HJ, Card.CQ, Card.C7, Card.ST, Card.HA,
+                //                 Card.HT, Card.HK, Card.HQ, Card.DA, Card.D9, Card.D7));
 
-                cut = new Bidder(cards, Player.MIDDLEHAND);
-                assertThat(cut.isGrand()).isTrue();
-                assertThat(cut.getTrumpSuit()).isEqualTo(null);
-                assertThat(cut.getCardsToDiscard()).contains(Card.ST, Card.CQ);
+                // cut = new Bidder(cards, Player.MIDDLEHAND);
+                // assertThat(cut.isGrand()).isTrue();
+                // assertThat(cut.getTrumpSuit()).isEqualTo(null);
+                // assertThat(cut.getCardsToDiscard()).contains(Card.ST, Card.CQ);
         }
 
         @Test

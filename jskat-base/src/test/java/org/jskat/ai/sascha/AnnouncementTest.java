@@ -110,5 +110,12 @@ public class AnnouncementTest {
                 assertThat(cut.getTrumpSuit()).isEqualTo(Suit.CLUBS);
                 assertThat(cut.getCardsToDiscard()).contains(Card.HK, Card.HQ);
 
+                cards = new CardList(Arrays.asList(Card.SQ, Card.SJ, Card.HT, Card.C9, Card.C7, Card.S7, Card.HA, Card.C8, Card.CQ, Card.HK, Card.CJ, Card.D8));
+                cut = new Bidder(cards, Player.FOREHAND);
+
+                assertThat(cut.isGrand()).isFalse();
+                assertThat(cut.getTrumpSuit()).isEqualTo(Suit.CLUBS);
+                assertThat(cut.getCardsToDiscard()).contains(Card.D8, Card.SQ);
+
         }
 }
