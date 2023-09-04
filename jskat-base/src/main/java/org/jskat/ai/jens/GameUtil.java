@@ -272,6 +272,8 @@ public class GameUtil {
             gameType = GameType.DIAMONDS;
         } else if (playZero) {
             gameType = GameType.NULL;
+        } else {
+            gameType = GameType.NULL;
         }
         log("gametype set to %s\n", gameType);
 
